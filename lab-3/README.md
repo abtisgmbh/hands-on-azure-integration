@@ -1,6 +1,6 @@
-## Lab 2 - Service Bus Queues
+## Lab 3 - Service Bus Topics
 
-![Architecture Lab-1](../docs/static/architecture-Lab-2.png)
+![Architecture Lab-1](../docs/static/architecture-Lab-3.png)
 
 ### Calling the pizza chef from Postman
 
@@ -10,6 +10,7 @@ Create a POST request in Postman and add the following json body:
 {
   "customer_name": "{{$randomFirstName}}",
   "customer_address": "some.customer@outlook.com",
-  "pizza_type": "Hawaii"
+  "pizza_type": "Hawaii",
+  "delivery_zone": "city"
 }
 ```
