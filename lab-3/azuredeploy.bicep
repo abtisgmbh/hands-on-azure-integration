@@ -14,6 +14,9 @@ var pizzaBakeryResourceName = 'pizzabakery${suffix}'
 var thermoBoxName = 'thermo-box'
 var serviceBusName = 'virtualpizzaorders${suffix}'
 var serviceBusQueueName = 'orders'
+var serviceBusTopicName = 'pizza-delivery'
+var serviceBusTopicSubscriptionCityName = 'delivery-city'
+var serviceBusTopicSubscriptionCityFilterName = 'delivery_zone_filter'
 
 resource pizzaBakery 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: pizzaBakeryResourceName
@@ -69,6 +72,54 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-prev
     status: 'Active'
     enablePartitioning: false
     enableExpress: false
+  }
+}
+
+resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-preview' = {
+  parent: virtualpizzaorders
+  name: serviceBusTopicName
+  properties: {
+    defaultMessageTimeToLive: 'PT1H'
+    maxSizeInMegabytes: 1024
+    requiresDuplicateDetection: true
+    duplicateDetectionHistoryTimeWindow: 'PT10M'
+    enableBatchedOperations: true
+    status: 'Active'
+    supportOrdering: true
+    autoDeleteOnIdle: 'P10675199DT2H48M5.4775807S'
+    enablePartitioning: false
+    enableExpress: false
+  }
+}
+
+resource serviceBusTopicSubscriptionCity 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-06-01-preview' = {
+  parent: serviceBusTopic
+  name: serviceBusTopicSubscriptionCityName
+  properties: {
+    isClientAffine: false
+    lockDuration: 'PT30S'
+    requiresSession: false
+    defaultMessageTimeToLive: 'P14D'
+    deadLetteringOnMessageExpiration: false
+    deadLetteringOnFilterEvaluationExceptions: false
+    maxDeliveryCount: 1
+    status: 'Active'
+    enableBatchedOperations: true
+    autoDeleteOnIdle: 'P10675198DT2H48M5.477S'
+  }
+}
+
+resource serviceBusTopicSubscriptionCityFilter 'Microsoft.ServiceBus/namespaces/topics/subscriptions/rules@2021-06-01-preview' = {
+  parent: serviceBusTopicSubscriptionCity
+  name: serviceBusTopicSubscriptionCityFilterName
+  properties: {
+    action: {}
+    filterType: 'CorrelationFilter'
+    correlationFilter: {
+      properties: {
+        delivery_zone: 'city'
+      }
+    }
   }
 }
 
