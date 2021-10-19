@@ -7,16 +7,19 @@ param deliveryBoyName string = 'bob'
 @description('Name of the receptionist')
 param receptionistName string = 'jim'
 
-var receptionistResourceName = 'receptionist-${receptionistName}'
+@description('Name of the delivery zone')
+param deliveryZoneName string = 'city'
+
 var location = resourceGroup().location
 var suffix = uniqueString(resourceGroup().id)
+
+var receptionistResourceName = 'receptionist-${receptionistName}'
 var pizzaBakeryResourceName = 'pizzabakery${suffix}'
 var thermoBoxName = 'thermo-box'
 var serviceBusName = 'virtualpizzaorders${suffix}'
 var serviceBusQueueName = 'orders'
 var serviceBusTopicName = 'pizza-delivery'
-var serviceBusTopicSubscriptionNameCity = 'delivery-city'
-var serviceBusTopicSubscriptionCityFilterName = 'delivery_zone_filter'
+
 
 resource pizzaBakery 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   name: pizzaBakeryResourceName
@@ -92,35 +95,15 @@ resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-prev
   }
 }
 
-resource serviceBusTopicSubscriptionCity 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-06-01-preview' = {
-  parent: serviceBusTopic
-  name: serviceBusTopicSubscriptionNameCity
-  properties: {
-    isClientAffine: false
-    lockDuration: 'PT30S'
-    requiresSession: false
-    defaultMessageTimeToLive: 'P14D'
-    deadLetteringOnMessageExpiration: false
-    deadLetteringOnFilterEvaluationExceptions: false
-    maxDeliveryCount: 1
-    status: 'Active'
-    enableBatchedOperations: true
-    autoDeleteOnIdle: 'P10675198DT2H48M5.477S'
+module deliveryZoneCity 'delivery-zone.bicep' = {
+  name: 'delivery-zone-${deliveryZoneName}'
+  params: {
+    deliveryZone: deliveryZoneName
+    serviceBusTopicName: serviceBusTopic.name
   }
-}
-
-resource serviceBusTopicSubscriptionCityFilter 'Microsoft.ServiceBus/namespaces/topics/subscriptions/rules@2021-06-01-preview' = {
-  parent: serviceBusTopicSubscriptionCity
-  name: serviceBusTopicSubscriptionCityFilterName
-  properties: {
-    action: {}
-    filterType: 'CorrelationFilter'
-    correlationFilter: {
-      properties: {
-        delivery_zone: 'city'
-      }
-    }
-  }
+  dependsOn: [
+    serviceBusTopic
+  ]
 }
 
 module pizzaChef 'pizza-chef.bicep' = {
@@ -146,7 +129,7 @@ module deliveryBoy 'delivery-boy.bicep' = {
     office365ConnectionName: office365Connection.name
     servicebusConnectionName: servicebusConnection.name
     serviceBusTopicName: serviceBusTopicName
-    serviceBusTopicSubscriptionName: serviceBusTopicSubscriptionNameCity
+    serviceBusTopicSubscriptionName: deliveryZoneCity.outputs.subscriptionName
   }
   dependsOn: [
     azureblobConnection
@@ -299,7 +282,3 @@ resource servicebusConnection 'Microsoft.Web/connections@2016-06-01' = {
     }
   }
 }
-
-output deliveryBoyId string = deliveryBoy.outputs.id
-output azureblobConnectionId string = azureblobConnection.id
-output servicebusConnectionId string = servicebusConnection.id
