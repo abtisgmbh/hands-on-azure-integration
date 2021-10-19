@@ -1,6 +1,5 @@
 param deliveryBoyName string
-param azureblobConnectionId string
-param office365ConnectionId string
+param servicebusConnectionName string = 'servicebus'
 param azureblobConnectionName string = 'azureblob'
 param office365ConnectionName string = 'office365'
 param serviceBusTopicName string = 'pizza-delivery'
@@ -8,6 +7,18 @@ param serviceBusTopicSubscriptionName string = 'delivery-city'
 
 var logicAppResourceName = 'delivery-boy-${deliveryBoyName}'
 var location = resourceGroup().location
+
+resource azureblobConnection 'Microsoft.Web/connections@2016-06-01' existing = {
+  name: azureblobConnectionName
+}
+
+resource servicebusConnection 'Microsoft.Web/connections@2016-06-01' existing = {
+  name: servicebusConnectionName
+}
+
+resource office365Connection 'Microsoft.Web/connections@2016-06-01' existing = {
+  name: office365ConnectionName
+}
 
 resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
   name: logicAppResourceName
@@ -170,14 +181,19 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
       '$connections': {
         value: {
           azureblob: {
-            connectionId: azureblobConnectionId
+            connectionId: azureblobConnection.id
             connectionName: azureblobConnectionName
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'azureblob')
           }
           office365: {
-            connectionId: office365ConnectionId
+            connectionId: office365Connection.id
             connectionName: office365ConnectionName
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'office365')
+          }
+          servicebus: {
+            connectionId: servicebusConnection.id
+            connectionName: servicebusConnectionName
+            id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'servicebus')
           }
         }
       }

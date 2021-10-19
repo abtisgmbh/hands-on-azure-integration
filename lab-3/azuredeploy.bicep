@@ -15,7 +15,7 @@ var thermoBoxName = 'thermo-box'
 var serviceBusName = 'virtualpizzaorders${suffix}'
 var serviceBusQueueName = 'orders'
 var serviceBusTopicName = 'pizza-delivery'
-var serviceBusTopicSubscriptionCityName = 'delivery-city'
+var serviceBusTopicSubscriptionNameCity = 'delivery-city'
 var serviceBusTopicSubscriptionCityFilterName = 'delivery_zone_filter'
 
 resource pizzaBakery 'Microsoft.Storage/storageAccounts@2021-04-01' = {
@@ -94,7 +94,7 @@ resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-prev
 
 resource serviceBusTopicSubscriptionCity 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-06-01-preview' = {
   parent: serviceBusTopic
-  name: serviceBusTopicSubscriptionCityName
+  name: serviceBusTopicSubscriptionNameCity
   properties: {
     isClientAffine: false
     lockDuration: 'PT30S'
@@ -131,20 +131,28 @@ module pizzaChef 'pizza-chef.bicep' = {
     serviceBusQueueName: serviceBusQueue.name
     serviceBusTopicName: serviceBusTopic.name
     azureblobConnectionName: azureblobConnection.name
-    azureblobConnectionId: azureblobConnection.id
-    servicebusConnectionId: servicebusConnection.id
   }
+  dependsOn: [
+    servicebusConnection
+    azureblobConnection
+  ]
 }
 
 module deliveryBoy 'delivery-boy.bicep' = {
   name: 'delivery-boy-deployment'
   params: {
-    azureblobConnectionId: azureblobConnection.id
     deliveryBoyName: deliveryBoyName
-    office365ConnectionId: office365Connection.id
     azureblobConnectionName: azureblobConnection.name
     office365ConnectionName: office365Connection.name
+    servicebusConnectionName: servicebusConnection.name
+    serviceBusTopicName: serviceBusTopicName
+    serviceBusTopicSubscriptionName: serviceBusTopicSubscriptionNameCity
   }
+  dependsOn: [
+    azureblobConnection
+    office365Connection
+    servicebusConnection
+  ]
 }
 
 resource receptionist 'Microsoft.Logic/workflows@2019-05-01' = {
