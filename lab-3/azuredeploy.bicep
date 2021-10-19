@@ -39,8 +39,8 @@ resource virtualpizzaorders 'Microsoft.ServiceBus/namespaces@2021-06-01-preview'
   name: serviceBusName
   location: location
   sku: {
-    name: 'Basic'
-    tier: 'Basic'
+    name: 'Standard'
+    tier: 'Standard'
   }
 }
 
