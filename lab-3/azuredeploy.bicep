@@ -129,8 +129,8 @@ module pizzaChef 'pizza-chef.bicep' = {
     pizzaChefName: pizzaChefName
     servicebusConnectionName: servicebusConnection.name
     serviceBusQueueName: serviceBusQueue.name
+    serviceBusTopicName: serviceBusTopic.name
     azureblobConnectionName: azureblobConnection.name
-    deliveryBoyId: deliveryBoy.outputs.id
     azureblobConnectionId: azureblobConnection.id
     servicebusConnectionId: servicebusConnection.id
   }
@@ -172,6 +172,9 @@ resource receptionist 'Microsoft.Logic/workflows@2019-05-01' = {
                   type: 'string'
                 }
                 customer_name: {
+                  type: 'string'
+                }
+                delivery_zone: {
                   type: 'string'
                 }
                 pizza_type: {

@@ -3,6 +3,8 @@ param azureblobConnectionId string
 param office365ConnectionId string
 param azureblobConnectionName string = 'azureblob'
 param office365ConnectionName string = 'office365'
+param serviceBusTopicName string = 'pizza-delivery'
+param serviceBusTopicSubscriptionName string = 'delivery-city'
 
 var logicAppResourceName = 'delivery-boy-${deliveryBoyName}'
 var location = resourceGroup().location
@@ -22,26 +24,28 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
         }
       }
       triggers: {
-        manual: {
-          type: 'Request'
-          kind: 'Http'
+        'When_one_or_more_messages_arrive_in_a_topic_(auto-complete)': {
+          recurrence: {
+            frequency: 'Second'
+            interval: 30
+          }
+          evaluatedRecurrence: {
+            frequency: 'Second'
+            interval: 30
+          }
+          splitOn: '@triggerBody()'
+          type: 'ApiConnection'
           inputs: {
-            schema: {
-              properties: {
-                customer_address: {
-                  type: 'string'
-                }
-                customer_name: {
-                  type: 'string'
-                }
-                pizza_path: {
-                  type: 'string'
-                }
-                pizza_type: {
-                  type: 'string'
-                }
+            host: {
+              connection: {
+                name: '@parameters(\'$connections\')[\'servicebus\'][\'connectionId\']'
               }
-              type: 'object'
+            }
+            method: 'get'
+            path: '/@{encodeURIComponent(encodeURIComponent(\'${serviceBusTopicName}\'))}/subscriptions/@{encodeURIComponent(\'${serviceBusTopicSubscriptionName}\')}/messages/batch/head'
+            queries: {
+              maxMessageCount: 1
+              subscriptionType: 'Main'
             }
           }
         }
@@ -59,12 +63,12 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
               Attachments: [
                 {
                   ContentBytes: '@{base64(body(\'Get_blob_content_(V2)\'))}'
-                  Name: '@{triggerBody()?[\'pizza_type\']}.pizza'
+                  Name: '@{body(\'Parse_JSON\')?[\'pizza_type\']}.pizza'
                 }
               ]
-              Body: '<p>Hi @{triggerBody()?[\'customer_name\']}, here is your pizza @{triggerBody()?[\'pizza_type\']}. Enjoy!</p>'
-              Subject: 'Your pizza @{triggerBody()?[\'pizza_type\']} is here!'
-              To: '@triggerBody()?[\'customer_address\']'
+              Body: '<p>Hi @{body(\'Parse_JSON\')?[\'customer_name\']}, here is your pizza @{body(\'Parse_JSON\')?[\'pizza_type\']}. Enjoy!</p>'
+              Subject: 'Your pizza @{body(\'Parse_JSON\')?[\'pizza_type\']} is here!'
+              To: '@body(\'Parse_JSON\')?[\'customer_address\']'
             }
             host: {
               connection: {
@@ -89,12 +93,28 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
             }
           }
         }
-        'OK_Chef!': {
+        Parse_JSON: {
           runAfter: {}
-          type: 'Response'
-          kind: 'Http'
+          type: 'ParseJson'
           inputs: {
-            statusCode: 200
+            content: '@base64ToString(triggerBody()?[\'ContentData\'])'
+            schema: {
+              properties: {
+                customer_address: {
+                  type: 'string'
+                }
+                customer_name: {
+                  type: 'string'
+                }
+                pizza_path: {
+                  type: 'string'
+                }
+                pizza_type: {
+                  type: 'string'
+                }
+              }
+              type: 'object'
+            }
           }
         }
         'Take_pizza_from_thermo-box': {
@@ -116,7 +136,7 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
                   }
                 }
                 method: 'delete'
-                path: '/v2/datasets/@{encodeURIComponent(encodeURIComponent(\'AccountNameFromSettings\'))}/files/@{encodeURIComponent(encodeURIComponent(triggerBody()?[\'pizza_path\']))}'
+                path: '/v2/datasets/@{encodeURIComponent(encodeURIComponent(\'AccountNameFromSettings\'))}/files/@{encodeURIComponent(encodeURIComponent(body(\'Parse_JSON\')?[\'pizza_path\']))}'
               }
             }
             'Get_blob_content_(V2)': {
@@ -129,7 +149,7 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
                   }
                 }
                 method: 'get'
-                path: '/v2/datasets/@{encodeURIComponent(encodeURIComponent(\'AccountNameFromSettings\'))}/files/@{encodeURIComponent(encodeURIComponent(triggerBody()?[\'pizza_path\']))}/content'
+                path: '/v2/datasets/@{encodeURIComponent(encodeURIComponent(\'AccountNameFromSettings\'))}/files/@{encodeURIComponent(encodeURIComponent(body(\'Parse_JSON\')?[\'pizza_path\']))}/content'
                 queries: {
                   inferContentType: true
                 }
@@ -137,7 +157,7 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
             }
           }
           runAfter: {
-            'OK_Chef!': [
+            Parse_JSON: [
               'Succeeded'
             ]
           }

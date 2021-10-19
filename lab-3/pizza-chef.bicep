@@ -2,8 +2,8 @@ param pizzaChefName string = 'alan'
 param thermoBoxName string = 'thermo-box'
 param azureblobConnectionName string = 'azureblob'
 param servicebusConnectionName string = 'servicebus'
+param serviceBusTopicName string = 'pizza-delivery'
 param serviceBusQueueName string = 'orders'
-param deliveryBoyId string
 param azureblobConnectionId string
 param servicebusConnectionId string
 
@@ -69,28 +69,6 @@ resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
             }
           }
         }
-        Notify_the_delivery_boy: {
-          runAfter: {
-            'Put_pizza_into_thermo-box': [
-              'Succeeded'
-            ]
-          }
-          type: 'Workflow'
-          inputs: {
-            body: {
-              customer_address: '@body(\'Parse_JSON\')?[\'customer_address\']'
-              customer_name: '@body(\'Parse_JSON\')?[\'customer_name\']'
-              pizza_path: '@body(\'Put_pizza_into_thermo-box\')?[\'Path\']'
-              pizza_type: '@body(\'Parse_JSON\')?[\'pizza_type\']'
-            }
-            host: {
-              triggerName: 'manual'
-              workflow: {
-                id: deliveryBoyId
-              }
-            }
-          }
-        }
         Parse_JSON: {
           runAfter: {}
           type: 'ParseJson'
@@ -104,12 +82,38 @@ resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
                 customer_name: {
                   type: 'string'
                 }
+                delivery_zone: {
+                  type: 'string'
+                }
                 pizza_type: {
                   type: 'string'
                 }
               }
               type: 'object'
             }
+          }
+        }
+        Pass_order_on_to_delivery: {
+          runAfter: {
+            'Put_pizza_into_thermo-box': [
+              'Succeeded'
+            ]
+          }
+          type: 'ApiConnection'
+          inputs: {
+            body: {
+              ContentData: '@{base64(concat(\'{\',\'\n\',\'  "customer_address": "\',body(\'Parse_JSON\')?[\'customer_address\'],\'",\',\'\n\',\'  "customer_name": "\',body(\'Parse_JSON\')?[\'customer_name\'],\'",\',\'\n\',\'  "pizza_path": "\',body(\'Put_pizza_into_thermo-box\')?[\'Path\'],\'",\',\'\n\',\'  "pizza_type": "\',body(\'Parse_JSON\')?[\'pizza_type\'],\'"\',\'\n\',\'}\'))}'
+              Properties: {
+                delivery_zone: '@{body(\'Parse_JSON\')?[\'delivery_zone\']}'
+              }
+            }
+            host: {
+              connection: {
+                name: '@parameters(\'$connections\')[\'servicebus\'][\'connectionId\']'
+              }
+            }
+            method: 'post'
+            path: '/@{encodeURIComponent(encodeURIComponent(\'${serviceBusTopicName}\'))}/messages'
           }
         }
         'Put_pizza_into_thermo-box': {
