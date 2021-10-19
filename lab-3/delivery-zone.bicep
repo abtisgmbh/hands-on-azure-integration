@@ -1,11 +1,16 @@
 param deliveryZone string
+param serviceBusName string
 param serviceBusTopicName string = 'pizza-delivery'
 
 var serviceBusTopicSubscriptionName = 'delivery-zone-${deliveryZone}'
 var serviceBusTopicSubscriptionFilterName = 'delivery-zone-filter-${deliveryZone}'
 
+resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' existing = {
+  name: serviceBusName
+}
+
 resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-preview' existing = {
-  name: serviceBusTopicName
+  name: '${serviceBusName}/${serviceBusTopicName}'
 }
 
 resource serviceBusTopicSubscription 'Microsoft.ServiceBus/namespaces/topics/subscriptions@2021-06-01-preview' = {

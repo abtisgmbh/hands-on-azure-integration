@@ -19,11 +19,21 @@ rg=rg-pizza-lab3
 az deployment group create -f lab-3/pizza-chef.bicep -g $rg --parameters pizzaChefName=michelangelo
 ```
 
-Deploy additional delivery boys for delivery zone "city" (default):
+Deploy additional delivery zones:
 
 ```bash
 rg=rg-pizza-lab3
-az deployment group create -f lab-3/delivery-boy.bicep -g $rg --parameters deliveryBoyName=fry
+serviceBusName=$(az servicebus namespace list -g $rg -o table | awk 'NR>2{print $5}')
+az deployment group create -f lab-3/delivery-zone.bicep -g $rg --parameters deliveryZone=suburb serviceBusName=$serviceBusName
+```
+
+Deploy additional delivery boys:
+
+```bash
+rg=rg-pizza-lab3
+az deployment group create -f lab-3/delivery-boy.bicep -g $rg --parameters deliveryBoyName=fry deliveryZone=city
+
+az deployment group create -f lab-3/delivery-boy.bicep -g $rg --parameters deliveryBoyName=bender deliveryZoneName=suburb
 ```
 
 ### Calling the pizza chef from Postman

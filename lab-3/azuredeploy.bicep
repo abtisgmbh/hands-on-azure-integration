@@ -38,7 +38,7 @@ resource thermoBox 'Microsoft.Storage/storageAccounts/blobServices/containers@20
   name: '${blobServices.name}/${thermoBoxName}'
 }
 
-resource virtualpizzaorders 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
+resource serviceBus 'Microsoft.ServiceBus/namespaces@2021-06-01-preview' = {
   name: serviceBusName
   location: location
   sku: {
@@ -48,7 +48,7 @@ resource virtualpizzaorders 'Microsoft.ServiceBus/namespaces@2021-06-01-preview'
 }
 
 resource serviceBusRootManageSharedAccessKey 'Microsoft.ServiceBus/namespaces/AuthorizationRules@2021-06-01-preview' = {
-  parent: virtualpizzaorders
+  parent: serviceBus
   name: 'RootManageSharedAccessKey'
   properties: {
     rights: [
@@ -60,7 +60,7 @@ resource serviceBusRootManageSharedAccessKey 'Microsoft.ServiceBus/namespaces/Au
 }
 
 resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-preview' = {
-  parent: virtualpizzaorders
+  parent: serviceBus
   name: serviceBusQueueName
   properties: {
     lockDuration: 'PT5M'
@@ -79,7 +79,7 @@ resource serviceBusQueue 'Microsoft.ServiceBus/namespaces/queues@2021-06-01-prev
 }
 
 resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-preview' = {
-  parent: virtualpizzaorders
+  parent: serviceBus
   name: serviceBusTopicName
   properties: {
     defaultMessageTimeToLive: 'PT1H'
@@ -95,13 +95,15 @@ resource serviceBusTopic 'Microsoft.ServiceBus/namespaces/topics@2021-06-01-prev
   }
 }
 
-module deliveryZoneCity 'delivery-zone.bicep' = {
+module deliveryZone 'delivery-zone.bicep' = {
   name: 'delivery-zone-${deliveryZoneName}'
   params: {
     deliveryZone: deliveryZoneName
+    serviceBusName: serviceBus.name
     serviceBusTopicName: serviceBusTopic.name
   }
   dependsOn: [
+    serviceBus
     serviceBusTopic
   ]
 }
@@ -129,7 +131,7 @@ module deliveryBoy 'delivery-boy.bicep' = {
     office365ConnectionName: office365Connection.name
     servicebusConnectionName: servicebusConnection.name
     serviceBusTopicName: serviceBusTopicName
-    serviceBusTopicSubscriptionName: deliveryZoneCity.outputs.subscriptionName
+    deliveryZoneName: deliveryZoneName
   }
   dependsOn: [
     azureblobConnection
