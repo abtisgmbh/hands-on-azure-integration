@@ -2,49 +2,77 @@
 
 ![Architecture Lab-1](../docs/static/architecture-Lab-3.png)
 
-### Deployment
-
-Deploy the lab:
+### Deploying the resources
 
 ```bash
-rg=rg-pizza-lab3
-az group create -n $rg -l westeurope
-az deployment group create -f lab-3/azuredeploy.bicep -g $rg
+az group create \
+  --name 'pizza-lab-3'\
+  --location westeurope \
+  --tags workshop=azureIntegration
+
+az deployment group create \
+  --resource-group 'pizza-lab-3' \
+  --template-file ./azuredeploy.bicep \
+  --parameters pizzaChefName='michelangelo' \
+      deliveryBoyName='fry' \
+      receptionistName='meghan' \
+      deliveryZoneName='city'
 ```
 
-Deploy additional pizza chefs:
+> **Note**: After the deployment succeeded, you need to manually authorize the o365 connection via the Azure portal (Edit API connection/Authorize/Save). You need to use an o365 account. Personal accounts without o365 license won't work.
 
-```bash
-rg=rg-pizza-lab3
-az deployment group create -f lab-3/pizza-chef.bicep -g $rg --parameters pizzaChefName=michelangelo
-```
+### Calling the receptionist from Postman
 
-Deploy additional delivery zones:
-
-```bash
-rg=rg-pizza-lab3
-serviceBusName=$(az servicebus namespace list -g $rg -o table | awk 'NR>2{print $5}')
-az deployment group create -f lab-3/delivery-zone.bicep -g $rg --parameters deliveryZone=suburb serviceBusName=$serviceBusName
-```
-
-Deploy additional delivery boys:
-
-```bash
-rg=rg-pizza-lab3
-az deployment group create -f lab-3/delivery-boy.bicep -g $rg --parameters deliveryBoyName=fry deliveryZone=city
-
-az deployment group create -f lab-3/delivery-boy.bicep -g $rg --parameters deliveryBoyName=bender deliveryZoneName=suburb
-```
-
-### Calling the pizza chef from Postman
-
-Create a POST request in Postman and add the following json body:
+Create a POST request in [Postman](https://www.postman.com/downloads/) and add the following json body:
 
 ```json
 {
   "customer_name": "{{$randomFirstName}}",
   "customer_address": "some.customer@outlook.com",
-  "pizza_type": "Hawaii",
+  "pizza_type": "Diavola",
   "delivery_zone": "city"
 }
 ```
+
+### Deploying additional pizza chefs
+
+```bash
+az deployment group create \
+  --resource-group 'pizza-lab-3' \
+  --template-file ./pizza-chef.bicep \
+  --parameters pizzaChefName='raphael'
+```
+
+### Deploying additional delivery zones
+
+```bash
+serviceBusName=$(az servicebus namespace list -g pizza-lab-3 -o tsv --query '[0].name')
+
+az deployment group create \
+  --template-file ./delivery-zone.bicep \
+  --resource-group 'pizza-lab-3' \
+  --parameters deliveryZone='suburb' \
+    serviceBusName=$serviceBusName
+```
+
+### Deploying additional delivery boys
+
+```bash
+az deployment group create \
+  --resource-group 'pizza-lab-3' \
+  --template-file ./delivery-boy.bicep \
+  --parameters deliveryZone='suburb' \
+      deliveryBoyName='bender'
+```
+
+New delivery boys need to be assigned to an existing deliveryZone. Use the following command to see all currenty available delivery zones (topic subscriptions)
+
+```bash
+serviceBusName=$(az servicebus namespace list -g pizza-lab-3 -o tsv --query '[0].name')
+az servicebus topic subscription list \
+  --resource-group 'pizza-lab-3' \
+  --namespace-name $serviceBusName \
+  --topic-name pizza-delivery --query '[].name'
+```
+
+>**Note:** The prefix `delivery-zone-` is automatically added during deployment.
