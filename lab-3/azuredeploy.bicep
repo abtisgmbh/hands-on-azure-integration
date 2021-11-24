@@ -1,11 +1,11 @@
 @description('Name of the pizza chef')
-param pizzaChefName string = 'alan'
+param pizzaChefName string = 'michelangelo'
 
 @description('Name of the delivery boy')
-param deliveryBoyName string = 'bob'
+param deliveryBoyName string = 'fry'
 
 @description('Name of the receptionist')
-param receptionistName string = 'jim'
+param receptionistName string = 'meghan'
 
 @description('Name of the delivery zone')
 param deliveryZoneName string = 'city'
@@ -112,10 +112,8 @@ module pizzaChef 'pizza-chef.bicep' = {
   name: 'pizza-chef-deployment'
   params: {
     pizzaChefName: pizzaChefName
-    servicebusConnectionName: servicebusConnection.name
     serviceBusQueueName: serviceBusQueue.name
     serviceBusTopicName: serviceBusTopic.name
-    azureblobConnectionName: azureblobConnection.name
   }
   dependsOn: [
     servicebusConnection
@@ -131,7 +129,7 @@ module deliveryBoy 'delivery-boy.bicep' = {
     office365ConnectionName: office365Connection.name
     servicebusConnectionName: servicebusConnection.name
     serviceBusTopicName: serviceBusTopicName
-    deliveryZoneName: deliveryZoneName
+    deliveryZone: deliveryZoneName
   }
   dependsOn: [
     azureblobConnection
