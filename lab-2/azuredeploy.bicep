@@ -1,11 +1,11 @@
 @description('Name of the pizza chef')
-param pizzaChefName string = 'alan'
+param pizzaChefName string = 'michelangelo'
 
 @description('Name of the delivery boy')
-param deliveryBoyName string = 'bob'
+param deliveryBoyName string = 'fry'
 
 @description('Name of the receptionist')
-param receptionistName string = 'jim'
+param receptionistName string = 'meghan'
 
 
 var deliveryBoyResourceName = 'delivery-boy-${deliveryBoyName}'
@@ -78,13 +78,14 @@ module pizzaChef 'pizza-chef.bicep' = {
   name: 'pizza-chef-deployment'
   params: {
     pizzaChefName: pizzaChefName
-    servicebusConnectionName: servicebusConnection.name
     serviceBusQueueName: serviceBusQueue.name
-    azureblobConnectionName: azureblobConnection.name
-    deliveryBoyId: deliveryBoy.id
-    azureblobConnectionId: azureblobConnection.id
-    servicebusConnectionId: servicebusConnection.id
+    deliveryBoyName: deliveryBoyName
   }
+  dependsOn: [
+    servicebusConnection
+    azureblobConnection
+    deliveryBoy
+  ]
 }
 
 resource deliveryBoy 'Microsoft.Logic/workflows@2019-05-01' = {

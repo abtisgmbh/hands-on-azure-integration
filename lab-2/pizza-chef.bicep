@@ -1,14 +1,22 @@
-param pizzaChefName string = 'alan'
+param pizzaChefName string = 'raphael'
 param thermoBoxName string = 'thermo-box'
-param azureblobConnectionName string = 'azureblob'
-param servicebusConnectionName string = 'servicebus'
 param serviceBusQueueName string = 'orders'
-param deliveryBoyId string
-param azureblobConnectionId string
-param servicebusConnectionId string
+param deliveryBoyName string = 'fry'
 
 var logicAppResourceName = 'pizza-chef-${pizzaChefName}'
 var location = resourceGroup().location
+
+resource azureblobConnection 'Microsoft.Web/connections@2016-06-01' existing = {
+  name: 'azureblob'
+}
+
+resource servicebusConnection 'Microsoft.Web/connections@2016-06-01' existing = {
+  name: 'servicebus'
+}
+
+resource deliveryBoy 'Microsoft.Logic/workflows@2019-05-01' existing = {
+  name: 'delivery-boy-${deliveryBoyName}'
+}
 
 resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
   name: logicAppResourceName
@@ -86,7 +94,7 @@ resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
             host: {
               triggerName: 'manual'
               workflow: {
-                id: deliveryBoyId
+                id: deliveryBoy.id
               }
             }
           }
@@ -150,13 +158,13 @@ resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
       '$connections': {
         value: {
           azureblob: {
-            connectionId: azureblobConnectionId
-            connectionName: azureblobConnectionName
+            connectionId: azureblobConnection.id
+            connectionName: azureblobConnection.name
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'azureblob')
           }
           servicebus: {
-            connectionId: servicebusConnectionId
-            connectionName: servicebusConnectionName
+            connectionId: servicebusConnection.id
+            connectionName: servicebusConnection.name
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'servicebus')
           }
         }
