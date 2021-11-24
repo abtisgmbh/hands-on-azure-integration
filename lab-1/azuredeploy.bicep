@@ -1,8 +1,8 @@
 @description('Name of the pizza chef')
-param pizzaChefName string = 'alan'
+param pizzaChefName string = 'michelangelo'
 
 @description('Name of the delivery boy')
-param deliveryBoyName string = 'bob'
+param deliveryBoyName string = 'fry'
 
 var logicAppResourceName = 'pizza-chef-${pizzaChefName}'
 var deliveryBoyResourceName = 'delivery-boy-${deliveryBoyName}'
