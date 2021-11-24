@@ -1,9 +1,9 @@
 param pizzaChefName string
 param thermoBoxName string = 'thermo-box'
-param azureblobConnectionName string = 'azureblob'
-param servicebusConnectionName string = 'servicebus'
 param serviceBusTopicName string = 'pizza-delivery'
 param serviceBusQueueName string = 'orders'
+param servicebusConnectionName string = 'servicebus'
+param azureblobConnectionName string = 'azureblob'
 
 var logicAppResourceName = 'pizza-chef-${pizzaChefName}'
 var location = resourceGroup().location
@@ -162,12 +162,12 @@ resource pizzaChef 'Microsoft.Logic/workflows@2019-05-01' = {
         value: {
           azureblob: {
             connectionId: azureblobConnection.id
-            connectionName: azureblobConnectionName
+            connectionName: azureblobConnection.name
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'azureblob')
           }
           servicebus: {
             connectionId: servicebusConnection.id
-            connectionName: servicebusConnectionName
+            connectionName: servicebusConnection.name
             id: subscriptionResourceId('Microsoft.Web/locations/managedApis', location, 'servicebus')
           }
         }

@@ -1,8 +1,8 @@
 @description('Name of the pizza chef')
-param pizzaChefName string = 'alan'
+param pizzaChefName string = 'michelangelo'
 
 @description('Name of the delivery boy')
-param deliveryBoyName string = 'bob'
+param deliveryBoyName string = 'fry'
 
 @description('Name of the receptionist')
 param receptionistName string = 'meghan'
@@ -121,10 +121,11 @@ module pizzaChef 'pizza-chef.bicep' = {
   name: 'pizza-chef-deployment'
   params: {
     pizzaChefName: pizzaChefName
-    servicebusConnectionName: servicebusConnection.name
     serviceBusQueueName: serviceBusQueue.name
     serviceBusTopicName: serviceBusTopic.name
     azureblobConnectionName: azureblobConnection.name
+    servicebusConnectionName: azureblobConnection.name
+    thermoBoxName: thermoBoxName
   }
   dependsOn: [
     servicebusConnection
@@ -140,7 +141,7 @@ module deliveryBoy 'delivery-boy.bicep' = {
     office365ConnectionName: office365Connection.name
     servicebusConnectionName: servicebusConnection.name
     serviceBusTopicName: serviceBusTopicName
-    deliveryZoneName: deliveryZoneName
+    deliveryZone: deliveryZoneName
   }
   dependsOn: [
     azureblobConnection
@@ -153,7 +154,11 @@ module receptionist 'receptionist.bicep' = {
   name: 'receptionist-deployment'
   params: {
     receptionistName: receptionistName
+    servicebusConnectionName: servicebusConnection.name
   }
+  dependsOn: [
+    servicebusConnection
+  ]
 }
 
 resource receptionistLogicApp 'Microsoft.Logic/workflows@2019-05-01' existing = {

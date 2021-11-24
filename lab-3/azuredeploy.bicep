@@ -114,6 +114,8 @@ module pizzaChef 'pizza-chef.bicep' = {
     pizzaChefName: pizzaChefName
     serviceBusQueueName: serviceBusQueue.name
     serviceBusTopicName: serviceBusTopic.name
+    azureblobConnectionName: azureblobConnection.name
+    servicebusConnectionName: servicebusConnection.name
   }
   dependsOn: [
     servicebusConnection

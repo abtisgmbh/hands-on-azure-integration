@@ -1,11 +1,11 @@
 param deliveryBoyName string
-param deliveryZoneName string
+param deliveryZone string
 param servicebusConnectionName string = 'servicebus'
 param azureblobConnectionName string = 'azureblob'
 param office365ConnectionName string = 'office365'
 param serviceBusTopicName string = 'pizza-delivery'
 
-var serviceBusTopicSubscriptionName = 'delivery-zone-${deliveryZoneName}'
+var serviceBusTopicSubscriptionName = 'delivery-zone-${deliveryZone}'
 var logicAppResourceName = 'delivery-boy-${deliveryBoyName}'
 var location = resourceGroup().location
 
