@@ -100,4 +100,4 @@ resource receptionist 'Microsoft.Logic/workflows@2019-05-01' = {
   }
 }
 
-output name string = receptionist.name
+output resource string = receptionist.name
