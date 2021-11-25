@@ -47,7 +47,7 @@ az deployment group create \
 ### Deploying additional delivery zones
 
 ```bash
-serviceBusName=$(az servicebus namespace list -g pizza-lab-3 -o tsv --query '[0].name')
+serviceBusName=$(az servicebus namespace list -g pizza-lab-4 -o tsv --query '[0].name')
 
 az deployment group create \
   --template-file ./delivery-zone.bicep \
@@ -69,9 +69,9 @@ az deployment group create \
 New delivery boys need to be assigned to an existing deliveryZone. Use the following command to see all currenty available delivery zones (topic subscriptions)
 
 ```bash
-serviceBusName=$(az servicebus namespace list -g pizza-lab-3 -o tsv --query '[0].name')
+serviceBusName=$(az servicebus namespace list -g pizza-lab-4 -o tsv --query '[0].name')
 az servicebus topic subscription list \
-  --resource-group 'pizza-lab-3' \
+  --resource-group 'pizza-lab-4' \
   --namespace-name $serviceBusName \
   --topic-name pizza-delivery --query '[].name'
 ```
