@@ -2,7 +2,7 @@ param apiManagementResourceName string
 param location string = resourceGroup().location
 param apiManagementSku string = 'Developer'
 param apiManagementPublisherName string = 'abtis GmbH'
-param apiManagementSkuPublisherEmail string = 'm.batsching@abtis.de'
+param apiManagementSkuPublisherEmail string
 param receptionistName string = 'meghan'
 
 resource receptionistLogicApp 'Microsoft.Logic/workflows@2019-05-01' existing = {

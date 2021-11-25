@@ -16,7 +16,8 @@ az deployment group create \
   --parameters pizzaChefName='michelangelo' \
       deliveryBoyName='fry' \
       receptionistName='meghan' \
-      deliveryZoneName='city'
+      deliveryZoneName='city' \
+      apiManagementSkuPublisherEmail='email@customer.lt'
 ```
 
 **Note**: After the deployment succeeded, you need to manually authorize the o365 connection via the Azure portal (Edit API connection/Authorize/Save). You need to use an o365 account. Personal accounts without o365 license won't work.

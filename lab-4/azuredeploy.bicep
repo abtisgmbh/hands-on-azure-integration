@@ -16,7 +16,9 @@ param deliveryZoneName string = 'city'
   'Premium'
 ])
 param apiManagementSku string = 'Developer'
-param apiManagementSkuPublisherEmail string = 'm.batsching@outlook.com'
+
+@description('Email of the account managing the API Management Service instance')
+param apiManagementSkuPublisherEmail string
 
 var location = resourceGroup().location
 var suffix = uniqueString(resourceGroup().id)
